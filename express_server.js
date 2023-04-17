@@ -11,6 +11,18 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+// Additional endpoints - a JSON string representing the entire urlDatabase object
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
+
+
+// The response can contain HTML code, which would be rendered in the client browser.
+app.get("/hello", (req, res) => {
+  res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
