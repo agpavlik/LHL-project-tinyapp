@@ -10,8 +10,10 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
+// This is the data we'll want to show on the URLs page. Collect in folder 'views'.
+app.get("/urls", (req, res) => {
+  const templateVars = { urls: urlDatabase };
+  res.render("urls_index", templateVars);
 });
 
 // Additional endpoints - a JSON string representing the entire urlDatabase object
