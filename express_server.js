@@ -16,6 +16,16 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+// Add another page to display a single URL and its shortened form. The end point for 
+// a page will be in the format /urls/:id. The : in front of id indicates that id is 
+// a route parameter. This means that the value in this part of the url will be available 
+//in the req.params object.
+
+app.get("/urls/:id", (req, res) => {
+  const templateVars = { id: req.params.id, longURL:''};
+  res.render("urls_show", templateVars);
+});
+
 // Additional endpoints - a JSON string representing the entire urlDatabase object
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
