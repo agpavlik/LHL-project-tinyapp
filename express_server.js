@@ -22,7 +22,7 @@ app.get("/urls", (req, res) => {
 //in the req.params object.
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL:''};
+  const templateVars = { id: req.params.id, longURL:'http://www.lighthouselabs.ca'};
   res.render("urls_show", templateVars);
 });
 
