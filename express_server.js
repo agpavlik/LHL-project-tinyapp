@@ -14,6 +14,11 @@ const urlDatabase = {
  into string that we can read. This needs to come before all of routes. */
 app.use(express.urlencoded({ extended: true }));
 
+// Cookie-parser
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
+
 // Function generates a random short URL id by return a string of 6 random alphanumeric characters:
 const generateRandomString = function() {
   const alphanum = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -33,7 +38,6 @@ app.post("/urls", (req, res) => {
   console.log(urlDatabase) // Log the updated Database to the console
   res.redirect(`/u/${shortURL}`);
 });
-
 
 // POST route to EDIT URL.
 app.post("/urls/:shortURL", (req, res) => {
@@ -57,10 +61,16 @@ app.post('/login', (req, res) => {
 });
 
 
+// POST route to LOG OUT user
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');
+});
+
 
 // MAIN PAGE
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase, username: req.cookies["username"]};
   res.render("urls_index", templateVars);
 });
 
@@ -69,13 +79,14 @@ app.get("/urls", (req, res) => {
 The GET /urls/new route needs to be defined before the 
 GET /urls/:id route. Routes defined earlier will take precedence */
 app.get('/urls/new',(req, res) => {
-  res.render("urls_new");
+  const templateVars = {username: req.cookies["username"]};
+  res.render("urls_new", templateVars);
 });
 
 
 // GET route to display a single URL and its shortened form.
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { id: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  const templateVars = { id: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"]};
   res.render("urls_show", templateVars);
 });
 
