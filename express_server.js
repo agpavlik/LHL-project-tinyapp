@@ -4,12 +4,6 @@ const PORT = 8080; // The port which server will listen on. Default port 8080
 
 app.set("view engine", "ejs") // This tells the Express app to use EJS as its templating engine.
 
-// URL DATABASE
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
-
 /*The body-parser library will convert the request body from a Buffer
  into string that we can read. This needs to come before all of routes. */
 app.use(express.urlencoded({ extended: true }));
@@ -17,6 +11,16 @@ app.use(express.urlencoded({ extended: true }));
 // Cookie-parser
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
+
+
+// URL DATABASE
+const urlDatabase = {
+  "b2xVn2": "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.google.com"
+};
+
+// USERS DATABASE
+
 
 
 // Function generates a random short URL id by return a string of 6 random alphanumeric characters:
@@ -96,6 +100,14 @@ app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   console.log("longURL : ", longURL);
   res.redirect(longURL);
+});
+
+// GET route to REGISTRATION form
+app.get("/register", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"]
+  };
+  res.render("urls_registration", templateVars);
 });
 
 
