@@ -32,6 +32,12 @@ app.post("/urls", (req, res) => {
   res.redirect(`/u/${shortURL}`);
 });
 
+// POST route to edit URL.
+app.post("/urls/:shortURL", (req, res) => {
+  urlDatabase[req.params.shortURL] = req.body.longURL;
+  res.redirect("/urls");
+});
+
 
 // POST route to delete URL from urlDatabase.
 app.post("/urls/:shortURL/delete", (req, res) => {
