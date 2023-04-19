@@ -13,14 +13,25 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 
-// URL DATABASE
+// URL database
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
-// USERS DATABASE
-
+// USERS database
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
 
 
 // Function generates a random short URL id by return a string of 6 random alphanumeric characters:
@@ -69,6 +80,32 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
   res.clearCookie('username');
   res.redirect('/urls');
+});
+
+
+// POST route to REGISTRATION for a new user. 
+app.post('/register', (req, res) => {
+  const newUserId = generateRandomString(); // generate a random user id
+  const email = req.body.email;
+  const password = req.body.password;
+  const userObj = {
+    id: newUserId,
+    email: email,
+    password: password
+  }
+  const findUserByEmail = (email, users) => { // check if user exist.
+    for (let i in users) {
+      if (users[i].email === email) {
+        res.status(403).send("User with this email already exist.");
+        return;
+      } else {
+        users[newUserId] = userObj; // add new user to global database
+        res.cookie('user_id', newUserId);
+        res.redirect('/urls');
+      }
+    }
+    console.log(users);
+  }
 });
 
 
