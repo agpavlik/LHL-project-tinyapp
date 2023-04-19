@@ -4,6 +4,7 @@ const PORT = 8080; // The port which server will listen on. Default port 8080
 
 app.set("view engine", "ejs") // This tells the Express app to use EJS as its templating engine.
 
+// URL DATABASE
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -27,23 +28,34 @@ const generateRandomString = function() {
 // POST route to handle the form submission.This needs to come before all of other routes.
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
-  let shortURL = generateRandomString(); //add Short URL ID to the urlDatabase
+  const shortURL = generateRandomString(); //add Short URL ID to the urlDatabase
   urlDatabase[shortURL] = req.body['longURL']; // add longURl to the urlDatabase
+  console.log(urlDatabase) // Log the updated Database to the console
   res.redirect(`/u/${shortURL}`);
 });
 
-// POST route to edit URL.
+
+// POST route to EDIT URL.
 app.post("/urls/:shortURL", (req, res) => {
   urlDatabase[req.params.shortURL] = req.body.longURL;
   res.redirect("/urls");
 });
 
 
-// POST route to delete URL from urlDatabase.
+// POST route to DELETE URL from urlDatabase.
 app.post("/urls/:shortURL/delete", (req, res) => {
     delete urlDatabase[req.params.shortURL];
     res.redirect("/urls");
 });
+
+
+// POST route to LOG IN user
+app.post('/login', (req, res) => {
+  let cookie = req.body.username;
+  res.cookie ('username', cookie);
+  res.redirect('/urls');
+});
+
 
 
 // MAIN PAGE
@@ -51,6 +63,7 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
+
 
 /* GET route to render the urls_new.ejs template. 
 The GET /urls/new route needs to be defined before the 
@@ -60,25 +73,26 @@ app.get('/urls/new',(req, res) => {
 });
 
 
-/* GET route to display a single URL and its shortened form.
-The : in front of id indicates that id is a route parameter. 
-This means that the value in this part of the url will be available in the req.params object.*/
-app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL:'http://www.lighthouselabs.ca'};
+// GET route to display a single URL and its shortened form.
+app.get("/urls/:shortURL", (req, res) => {
+  const templateVars = { id: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
 });
 
-// GET route - Redirection to longURL when given shortURL
+
+// GET route to REDIRECTION to longURL when given shortURL
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
+  console.log("longURL : ", longURL);
   res.redirect(longURL);
 });
 
 
-// // Additional endpoints - a JSON string representing the entire urlDatabase object.
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
+// Additional endpoints - a JSON string representing the entire urlDatabase object.
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
+
 
 // // The response can contain HTML code, which would be rendered in the client browser.
 // app.get("/hello", (req, res) => {
