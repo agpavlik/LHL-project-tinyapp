@@ -152,12 +152,22 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+
 // GET route to REGISTRATION form
 app.get("/register", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId];
   const templateVars = { user: user};
   res.render("urls_registration", templateVars);
+});
+
+
+// GET route to LOG IN form
+app.get('/login', (req, res) => {
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+  const templateVars = { user: user};
+  res.render("urls_login", templateVars);
 });
 
 
