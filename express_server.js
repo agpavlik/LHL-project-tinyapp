@@ -45,7 +45,7 @@ const generateRandomString = function() {
 };
 
 // Function checks if user email exist in database
-const findUserByEmail = (email, users) => {
+const getUserByEmail = (email, users) => {
   for (let i in users) {
     if (users[i].email === email) {
       return users[i];
@@ -87,7 +87,8 @@ app.post('/login', (req, res) => {
 
 // POST route to LOG OUT user
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  const newUserId = generateRandomString();
+  res.clearCookie('user_id', newUserId);
   res.redirect('/urls');
 });
 
@@ -105,7 +106,7 @@ app.post('/register', (req, res) => {
   if (userObj.email === "" || userObj.password === "") {
     return res.status(400).send("Error code 400! Please write your email and password");
   }
-  if (findUserByEmail(email, users)) {
+  if (getUserByEmail(email, users)) {
     return res.status(400).send("Error code 400! Please write your email and password");
   }
   res.cookie ('user_id', newUserId);
