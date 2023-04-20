@@ -15,24 +15,29 @@ app.use(cookieParser());
 
 // URL database
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userId: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userId: "aJ49lW",
+  },
 };
 
 // USERS database
 const users = {
-  userRandomID: {
-    id: "userRandomID",
+  aJ48lW: {
+    id: "aJ48lW",
     email: "user@example.com",
     password: "purple-monkey-dinosaur",
   },
-  user2RandomID: {
-    id: "user2RandomID",
+  aJ49lW: {
+    id: "aJ49lW",
     email: "user2@example.com",
     password: "dishwasher-funk",
   },
 };
-//jjl
 
 // Function generates a random short URL id by return a string of 6 random alphanumeric characters:
 const generateRandomString = function() {
@@ -62,13 +67,26 @@ const getUserByPassword = (password, users) => {
   } return null;
 }
 
+// Function finds and returns urls owned by the exact user  
+const getUrlByUserId = (userId, urlDatabase) => {
+  let urlsByUser = {};
+  for (let i in urlDatabase) {
+    if (urlDatabase[i].userId === userId ) {
+      urlsByUser[i] = urlDatabase[i];
+    }
+  } return urlsByUser;
+}
+
 
 // POST route to handle the form submission.This needs to come before all of other routes.
 app.post("/urls", (req, res) => {
   const userId = req.cookies.user_id;
   if (userId){
     const shortURL = generateRandomString(); //add Short URL ID to the urlDatabase
-    urlDatabase[shortURL] = req.body['longURL']; // add longURl to the urlDatabase
+    urlDatabase[shortURL] = {
+      longURL: req.body.longURL,
+      userID: req.body.user_id
+    } // add longURl to the urlDatabase
     console.log(urlDatabase) // Log the updated Database to the console
     res.redirect(`/u/${shortURL}`);
   } else {
@@ -141,10 +159,10 @@ app.post('/register', (req, res) => {
 // MAIN PAGE
 app.get("/urls", (req, res) => {
   const userId = req.cookies.user_id;
-  console.log(userId);
   const user = users[userId];
-  console.log(users);
-  const templateVars = { urls: urlDatabase, user: user};
+
+  const urlsUser = getUrlByUserId(userId, urlDatabase); 
+  const templateVars = { urls: urlsUser, user: user};
   res.render("urls_index", templateVars);
 });
 
@@ -167,7 +185,11 @@ app.get('/urls/new',(req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId];
-  const templateVars = { id: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: user};
+  const templateVars = { 
+    id: req.params.shortURL, 
+    longURL: urlDatabase[req.params.shortURL].longURL,
+    userID: urlDatabase[req.params.shortURL].userID, 
+    user: user};
   res.render("urls_show", templateVars);
 });
 
@@ -175,7 +197,7 @@ app.get("/urls/:shortURL", (req, res) => {
 // GET route to REDIRECTION to longURL when given shortURL
 app.get("/u/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   console.log("longURL : ", longURL);
   res.redirect(longURL);
   } else {
