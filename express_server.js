@@ -90,21 +90,31 @@ app.post("/urls", (req, res) => {
     console.log(urlDatabase) // Log the updated Database to the console
     res.redirect(`/u/${shortURL}`);
   } else {
-    return res.status(401).send("You must be logged in for shortening URLs.");
+    return res.status(400).send("You must be logged in for shortening URLs.");
   }
 });
 
 // POST route to EDIT URL.
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.longURL;
-  res.redirect("/urls");
+  const userId = req.cookies.user_id;
+  if (userId === urlDatabase[req.params.shortURL].iserId) {
+    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+    res.redirect("/urls");
+  } else {
+    res.status(400).send("You try to access the URLs that does not exist in your database.");
+  }
 });
 
 
 // POST route to DELETE URL from urlDatabase.
 app.post("/urls/:shortURL/delete", (req, res) => {
-    delete urlDatabase[req.params.shortURL];
+  const userId = req.cookies.user_id;
+  if (userId === urlDatabase[req.params.shortURL].iserId) {
+    delete urlDatabase[req.params.shortURL].longURL;
     res.redirect("/urls");
+  } else {
+    res.status(400).send("You try to access the URLs that does not exist in your database.");
+  }
 });
 
 
@@ -119,7 +129,7 @@ app.post('/login', (req, res) => {
     res.cookie ('user_id', newUserId);
     res.redirect('/urls');
   } else {
-    res.status(403).send("Error code 403: Wrong email or password!");
+    res.status(400).send("Error code 403: Wrong email or password!");
   }
 });
 
@@ -160,7 +170,6 @@ app.post('/register', (req, res) => {
 app.get("/urls", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId];
-
   const urlsUser = getUrlByUserId(userId, urlDatabase); 
   const templateVars = { urls: urlsUser, user: user};
   res.render("urls_index", templateVars);
@@ -190,6 +199,9 @@ app.get("/urls/:shortURL", (req, res) => {
     longURL: urlDatabase[req.params.shortURL].longURL,
     userID: urlDatabase[req.params.shortURL].userID, 
     user: user};
+  if (!userId) {
+    return res.redirect("/login");
+  }
   res.render("urls_show", templateVars);
 });
 
@@ -241,12 +253,6 @@ app.get("/urls.json", (req, res) => {
 // app.get("/hello", (req, res) => {
 //   res.send("<html><body>Hello <b>World</b></body></html>\n");
 // });
-
-// app.get("/login", (req, res) => {   
-//  const templateVars = { urls: urlDatabase };   
-// if (req.cookies.userid) { res.redirect(/urls);  
-//  } else { templateVars["user"] = null;}   
-//  res.render("login", templateVars); })
 
 
 app.listen(PORT, () => {
