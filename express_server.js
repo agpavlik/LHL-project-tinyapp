@@ -48,10 +48,20 @@ const generateRandomString = function() {
 const getUserByEmail = (email, users) => {
   for (let i in users) {
     if (users[i].email === email) {
-      return users[i];
+      return users[i].email;
     }
   } return null;
 }
+
+// Function checks if user password exist in database
+const getUserByPassword = (password, users) => {
+  for (let i in users) {
+    if (users[i].password === password) {
+      return users[i].password;
+    }
+  } return null;
+}
+
 
 
 // POST route to handle the form submission.This needs to come before all of other routes.
@@ -79,9 +89,17 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 // POST route to LOG IN user
 app.post('/login', (req, res) => {
-  const newUserId = generateRandomString();
-  res.cookie ('user_id', newUserId);
-  res.redirect('/urls');
+  const email = req.body.email;
+  const password = req.body.password;
+  const userEmail = getUserByEmail(email, users);
+  const userPassword = getUserByPassword(password, users);
+  if (email === userEmail && password === userPassword) {
+    const newUserId = generateRandomString();
+    res.cookie ('user_id', newUserId);
+    res.redirect('/urls');
+  } else {
+    res.status(403).send("Error code 403: Wrong email or password!");
+  }
 });
 
 
@@ -89,7 +107,7 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
   const newUserId = generateRandomString();
   res.clearCookie('user_id', newUserId);
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 
@@ -185,3 +203,9 @@ app.get("/urls.json", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+
+// app.get("/login", (req, res) => {   const templateVars = { urls: urlDatabase };   
+// if (req.cookies.userid) {      res.redirect(/urls);  
+//  } else {     templateVars["user"] = null;   }   
+//  res.render("login", templateVars); });
