@@ -32,7 +32,7 @@ const users = {
     password: "dishwasher-funk",
   },
 };
-
+//jjl
 
 // Function generates a random short URL id by return a string of 6 random alphanumeric characters:
 const generateRandomString = function() {
@@ -48,7 +48,7 @@ const generateRandomString = function() {
 const getUserByEmail = (email, users) => {
   for (let i in users) {
     if (users[i].email === email) {
-      return users[i].email;
+      return users[i];
     }
   } return null;
 }
@@ -63,14 +63,17 @@ const getUserByPassword = (password, users) => {
 }
 
 
-
 // POST route to handle the form submission.This needs to come before all of other routes.
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  const shortURL = generateRandomString(); //add Short URL ID to the urlDatabase
-  urlDatabase[shortURL] = req.body['longURL']; // add longURl to the urlDatabase
-  console.log(urlDatabase) // Log the updated Database to the console
-  res.redirect(`/u/${shortURL}`);
+  const userId = req.cookies.user_id;
+  if (userId){
+    const shortURL = generateRandomString(); //add Short URL ID to the urlDatabase
+    urlDatabase[shortURL] = req.body['longURL']; // add longURl to the urlDatabase
+    console.log(urlDatabase) // Log the updated Database to the console
+    res.redirect(`/u/${shortURL}`);
+  } else {
+    return res.status(401).send("You must be logged in for shortening URLs.");
+  }
 });
 
 // POST route to EDIT URL.
@@ -91,10 +94,10 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const userEmail = getUserByEmail(email, users);
+  const user = getUserByEmail(email, users);
   const userPassword = getUserByPassword(password, users);
-  if (email === userEmail && password === userPassword) {
-    const newUserId = generateRandomString();
+  if (email === user.email && password === userPassword) {
+    const newUserId = user.id;
     res.cookie ('user_id', newUserId);
     res.redirect('/urls');
   } else {
@@ -130,6 +133,7 @@ app.post('/register', (req, res) => {
   res.cookie ('user_id', newUserId);
   users[newUserId] = userObj;  
   res.redirect('/urls');
+  console.log(users);
 });
 
 
@@ -137,7 +141,9 @@ app.post('/register', (req, res) => {
 // MAIN PAGE
 app.get("/urls", (req, res) => {
   const userId = req.cookies.user_id;
+  console.log(userId);
   const user = users[userId];
+  console.log(users);
   const templateVars = { urls: urlDatabase, user: user};
   res.render("urls_index", templateVars);
 });
@@ -150,7 +156,10 @@ app.get('/urls/new',(req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId];
   const templateVars = {user: user};
-  res.render("urls_new", templateVars);
+  if (!userId) {
+    return res.redirect("/login");
+  }
+  return res.render("urls_new", templateVars);
 });
 
 
@@ -165,9 +174,13 @@ app.get("/urls/:shortURL", (req, res) => {
 
 // GET route to REDIRECTION to longURL when given shortURL
 app.get("/u/:shortURL", (req, res) => {
+  if (urlDatabase[req.params.shortURL]) {
   const longURL = urlDatabase[req.params.shortURL];
   console.log("longURL : ", longURL);
   res.redirect(longURL);
+  } else {
+    res.status(400).send("You try to access the shorten URLs that does not exist in database.");
+  }
 });
 
 
@@ -176,16 +189,23 @@ app.get("/register", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId];
   const templateVars = { user: user};
-  res.render("urls_registration", templateVars);
+  if (userId) {
+   return res.redirect('/urls')
+  }
+  return res.render("urls_registration", templateVars);
 });
 
 
 // GET route to LOG IN form
-app.get('/login', (req, res) => {
+app.get("/login", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId];
+  console.log(user);
   const templateVars = { user: user};
-  res.render("urls_login", templateVars);
+  if (userId) { 
+    return res.redirect('/urls');
+  }
+  return res.render("urls_login", templateVars);
 });
 
 
@@ -200,12 +220,13 @@ app.get("/urls.json", (req, res) => {
 //   res.send("<html><body>Hello <b>World</b></body></html>\n");
 // });
 
+// app.get("/login", (req, res) => {   
+//  const templateVars = { urls: urlDatabase };   
+// if (req.cookies.userid) { res.redirect(/urls);  
+//  } else { templateVars["user"] = null;}   
+//  res.render("login", templateVars); })
+
+
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp listening on port ${PORT}!`);
 });
-
-
-// app.get("/login", (req, res) => {   const templateVars = { urls: urlDatabase };   
-// if (req.cookies.userid) {      res.redirect(/urls);  
-//  } else {     templateVars["user"] = null;   }   
-//  res.render("login", templateVars); });
