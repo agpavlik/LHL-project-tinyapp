@@ -44,6 +44,15 @@ const generateRandomString = function() {
   return output;
 };
 
+// Function checks if user email exist in database
+const findUserByEmail = (email, users) => {
+  for (let i in users) {
+    if (users[i].email === email) {
+      return users[i];
+    }
+  } return null;
+}
+
 
 // POST route to handle the form submission.This needs to come before all of other routes.
 app.post("/urls", (req, res) => {
@@ -70,15 +79,15 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 // POST route to LOG IN user
 app.post('/login', (req, res) => {
-  let cookie = req.body.username;
-  res.cookie ('username', cookie);
+  const newUserId = generateRandomString();
+  res.cookie ('user_id', newUserId);
   res.redirect('/urls');
 });
 
 
 // POST route to LOG OUT user
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
@@ -93,25 +102,24 @@ app.post('/register', (req, res) => {
     email: email,
     password: password
   }
-  const findUserByEmail = (email, users) => { // check if user exist.
-    for (let i in users) {
-      if (users[i].email === email) {
-        res.status(403).send("User with this email already exist.");
-        return;
-      } else {
-        users[newUserId] = userObj; // add new user to global database
-        res.cookie('user_id', newUserId);
-        res.redirect('/urls');
-      }
-    }
-    console.log(users);
+  if (userObj.email === "" || userObj.password === "") {
+    return res.status(400).send("Error code 400! Please write your email and password");
   }
+  if (findUserByEmail(email, users)) {
+    return res.status(400).send("Error code 400! Please write your email and password");
+  }
+  res.cookie ('user_id', newUserId);
+  users[newUserId] = userObj;  
+  res.redirect('/urls');
 });
+
 
 
 // MAIN PAGE
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"]};
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+  const templateVars = { urls: urlDatabase, user: user};
   res.render("urls_index", templateVars);
 });
 
@@ -120,14 +128,18 @@ app.get("/urls", (req, res) => {
 The GET /urls/new route needs to be defined before the 
 GET /urls/:id route. Routes defined earlier will take precedence */
 app.get('/urls/new',(req, res) => {
-  const templateVars = {username: req.cookies["username"]};
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+  const templateVars = {user: user};
   res.render("urls_new", templateVars);
 });
 
 
 // GET route to display a single URL and its shortened form.
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { id: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"]};
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+  const templateVars = { id: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: user};
   res.render("urls_show", templateVars);
 });
 
@@ -141,9 +153,9 @@ app.get("/u/:shortURL", (req, res) => {
 
 // GET route to REGISTRATION form
 app.get("/register", (req, res) => {
-  const templateVars = {
-    username: req.cookies["username"]
-  };
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+  const templateVars = { user: user};
   res.render("urls_registration", templateVars);
 });
 
