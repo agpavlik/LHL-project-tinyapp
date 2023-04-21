@@ -6,7 +6,7 @@ const bcrypt = require("bcryptjs");
 
 /*The body-parser library will convert the request body from a Buffer
  into string that we can read. This needs to come before all of routes. */
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }))
 
 // Helpers - functions
 const { generateRandomString, getUserByEmail, getUserByPassword, getUrlByUserId } = require("./helpers");
@@ -20,20 +20,19 @@ app.use(cookieSession({
   name: 'session',
   keys: ['orange', 'moon', 'asset'],
   maxAge: 24 * 60 * 60 * 1000,
-}));
-
+}))
 
 // URL database
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
-    userId: "aJ48lW",
+    userId: "aJ48lW"
   },
   i3BoGr: {
     longURL: "https://www.google.ca",
-    userId: "aJ49lW",
+    userId: "aJ49lW"
   },
-};
+}
 
 // USERS database
 const users = {
@@ -46,9 +45,8 @@ const users = {
     id: "aJ49lW",
     email: "user2@example.com",
     password: bcrypt.hashSync("dishwasher-funk", 10)
-  },
-};
-
+  }
+}
 
 // POST route to handle the form submission.This needs to come before all of other routes.
 app.post("/urls", (req, res) => {
@@ -64,7 +62,7 @@ app.post("/urls", (req, res) => {
   } else {
     return res.status(400).send("You must be logged in for shortening URLs.");
   }
-});
+})
 
 // POST route to EDIT URL.
 app.post("/urls/:shortURL", (req, res) => {
@@ -75,8 +73,7 @@ app.post("/urls/:shortURL", (req, res) => {
   } else {
     res.status(400).send("You try to access the URLs that does not exist in your database.");
   }
-});
-
+})
 
 // POST route to DELETE URL from urlDatabase.
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -87,8 +84,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   } else {
     res.status(400).send("You try to access the URLs that does not exist in your database.");
   }
-});
-
+})
 
 // POST route to LOG IN user
 app.post('/login', (req, res) => {
@@ -105,16 +101,14 @@ app.post('/login', (req, res) => {
       return res.status(400).send("Error code 403: Wrong email or password!");
     }
   }
-});
-
+})
 
 // POST route to LOG OUT user
 app.post('/logout', (req, res) => {
   const newUserId = generateRandomString();
   req.session = null;
   res.redirect('/login');
-});
-
+})
 
 // POST route to REGISTRATION for a new user. 
 app.post('/register', (req, res) => {
@@ -136,9 +130,7 @@ app.post('/register', (req, res) => {
   users[newUserId] = userObj;  
   res.redirect('/urls');
   console.log(users);
-});
-
-
+})
 
 // MAIN PAGE
 app.get("/urls", (req, res) => {
@@ -147,8 +139,7 @@ app.get("/urls", (req, res) => {
   const urlsUser = getUrlByUserId(userId, urlDatabase); 
   const templateVars = { urls: urlsUser, user: user};
   res.render("urls_index", templateVars);
-});
-
+})
 
 /* GET route to render the urls_new.ejs template. 
 The GET /urls/new route needs to be defined before the 
@@ -161,8 +152,7 @@ app.get('/urls/new',(req, res) => {
     return res.redirect("/login");
   }
   return res.render("urls_new", templateVars);
-});
-
+})
 
 // GET route to display a single URL and its shortened form.
 app.get("/urls/:shortURL", (req, res) => {
@@ -177,8 +167,7 @@ app.get("/urls/:shortURL", (req, res) => {
     return res.redirect("/login");
   }
   res.render("urls_show", templateVars);
-});
-
+})
 
 // GET route to REDIRECTION to longURL when given shortURL
 app.get("/u/:shortURL", (req, res) => {
@@ -189,8 +178,7 @@ app.get("/u/:shortURL", (req, res) => {
   } else {
     res.status(400).send("You try to access the shorten URLs that does not exist in database.");
   }
-});
-
+})
 
 // GET route to REGISTRATION form
 app.get("/register", (req, res) => {
@@ -201,8 +189,7 @@ app.get("/register", (req, res) => {
    return res.redirect('/urls')
   }
   return res.render("urls_registration", templateVars);
-});
-
+})
 
 // GET route to LOG IN form
 app.get("/login", (req, res) => {
@@ -214,21 +201,18 @@ app.get("/login", (req, res) => {
     return res.redirect('/urls');
   }
   return res.render("urls_login", templateVars);
-});
-
+})
 
 // Additional endpoints - a JSON string representing the entire urlDatabase object.
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
-});
-
+})
 
 // // The response can contain HTML code, which would be rendered in the client browser.
 // app.get("/hello", (req, res) => {
 //   res.send("<html><body>Hello <b>World</b></body></html>\n");
 // });
 
-
 app.listen(PORT, () => {
   console.log(`TinyApp listening on port ${PORT}!`);
-});
+})
