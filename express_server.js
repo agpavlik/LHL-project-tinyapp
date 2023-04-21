@@ -1,14 +1,15 @@
 const express = require("express"); // Express library
 const app = express();
 const PORT = 8080; // The port which server will listen on. Default port 8080
-
 app.set("view engine", "ejs") // This tells the Express app to use EJS as its templating engine.
-
 const bcrypt = require("bcryptjs");
 
 /*The body-parser library will convert the request body from a Buffer
  into string that we can read. This needs to come before all of routes. */
 app.use(express.urlencoded({ extended: true }));
+
+// Helpers - functions
+const { generateRandomString, getUserByEmail, getUserByPassword, getUrlByUserId } = require("./helpers");
 
 // Cookie-parser
 const cookieParser = require('cookie-parser');
@@ -20,6 +21,7 @@ app.use(cookieSession({
   keys: ['orange', 'moon', 'asset'],
   maxAge: 24 * 60 * 60 * 1000,
 }));
+
 
 // URL database
 const urlDatabase = {
@@ -46,44 +48,6 @@ const users = {
     password: bcrypt.hashSync("dishwasher-funk", 10)
   },
 };
-
-// Function generates a random short URL id by return a string of 6 random alphanumeric characters:
-const generateRandomString = function() {
-  const alphanum = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let output = '';
-  for (let i = 0; i < 6; i++) {
-    output += alphanum.charAt(Math.floor(Math.random() * alphanum.length));
-  }
-  return output;
-};
-
-// Function checks if user email exist in database
-const getUserByEmail = (email, users) => {
-  for (let i in users) {
-    if (users[i].email === email) {
-      return users[i];
-    }
-  } return null;
-}
-
-// Function checks if user password exist in database
-const getUserByPassword = (email, users) => {
-  for (let i in users) {
-    if (users[i].email === email) {
-      return users[i].password;
-    }
-  } return null;
-}
-
-// Function finds and returns urls owned by the exact user  
-const getUrlByUserId = (userId, urlDatabase) => {
-  let urlsByUser = {};
-  for (let i in urlDatabase) {
-    if (urlDatabase[i].userId === userId ) {
-      urlsByUser[i] = urlDatabase[i];
-    }
-  } return urlsByUser;
-}
 
 
 // POST route to handle the form submission.This needs to come before all of other routes.
