@@ -4,6 +4,8 @@ const PORT = 8080; // The port which server will listen on. Default port 8080
 
 app.set("view engine", "ejs") // This tells the Express app to use EJS as its templating engine.
 
+const bcrypt = require("bcryptjs");
+
 /*The body-parser library will convert the request body from a Buffer
  into string that we can read. This needs to come before all of routes. */
 app.use(express.urlencoded({ extended: true }));
@@ -30,12 +32,12 @@ const users = {
   aJ48lW: {
     id: "aJ48lW",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: bcrypt.hashSync("purple-monkey-dinosaur", 10)
   },
   aJ49lW: {
     id: "aJ49lW",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: bcrypt.hashSync("dishwasher-funk", 10)
   },
 };
 
@@ -59,9 +61,9 @@ const getUserByEmail = (email, users) => {
 }
 
 // Function checks if user password exist in database
-const getUserByPassword = (password, users) => {
+const getUserByPassword = (email, users) => {
   for (let i in users) {
-    if (users[i].password === password) {
+    if (users[i].email === email) {
       return users[i].password;
     }
   } return null;
@@ -97,7 +99,7 @@ app.post("/urls", (req, res) => {
 // POST route to EDIT URL.
 app.post("/urls/:shortURL", (req, res) => {
   const userId = req.cookies.user_id;
-  if (userId === urlDatabase[req.params.shortURL].iserId) {
+  if (userId === urlDatabase[req.params.shortURL].userId) {
     urlDatabase[req.params.shortURL].longURL = req.body.longURL;
     res.redirect("/urls");
   } else {
@@ -109,8 +111,8 @@ app.post("/urls/:shortURL", (req, res) => {
 // POST route to DELETE URL from urlDatabase.
 app.post("/urls/:shortURL/delete", (req, res) => {
   const userId = req.cookies.user_id;
-  if (userId === urlDatabase[req.params.shortURL].iserId) {
-    delete urlDatabase[req.params.shortURL].longURL;
+  if (userId === urlDatabase[req.params.shortURL].userId) {
+    delete urlDatabase[req.params.shortURL];
     res.redirect("/urls");
   } else {
     res.status(400).send("You try to access the URLs that does not exist in your database.");
@@ -123,13 +125,15 @@ app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const user = getUserByEmail(email, users);
-  const userPassword = getUserByPassword(password, users);
-  if (email === user.email && password === userPassword) {
+  const userPassword = getUserByPassword(email, users);
+  if (email === user.email) {
+    if (bcrypt.compareSync(password, userPassword)) {
     const newUserId = user.id;
     res.cookie ('user_id', newUserId);
-    res.redirect('/urls');
-  } else {
-    res.status(400).send("Error code 403: Wrong email or password!");
+    return res.redirect('/urls');
+    } else {
+      return res.status(400).send("Error code 403: Wrong email or password!");
+    }
   }
 });
 
@@ -150,7 +154,7 @@ app.post('/register', (req, res) => {
   const userObj = {
     id: newUserId,
     email: email,
-    password: password
+    password: bcrypt.hashSync(password, 10),
   }
   if (userObj.email === "" || userObj.password === "") {
     return res.status(400).send("Error code 400! Please write your email and password");
