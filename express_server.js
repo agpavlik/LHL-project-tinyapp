@@ -14,6 +14,12 @@ app.use(express.urlencoded({ extended: true }));
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
+const cookieSession = require('cookie-session');
+app.use(cookieSession({
+  name: 'session',
+  keys: ['orange', 'moon', 'asset'],
+  maxAge: 24 * 60 * 60 * 1000,
+}));
 
 // URL database
 const urlDatabase = {
@@ -82,7 +88,7 @@ const getUrlByUserId = (userId, urlDatabase) => {
 
 // POST route to handle the form submission.This needs to come before all of other routes.
 app.post("/urls", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   if (userId){
     const shortURL = generateRandomString(); //add Short URL ID to the urlDatabase
     urlDatabase[shortURL] = {
@@ -98,7 +104,7 @@ app.post("/urls", (req, res) => {
 
 // POST route to EDIT URL.
 app.post("/urls/:shortURL", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   if (userId === urlDatabase[req.params.shortURL].userId) {
     urlDatabase[req.params.shortURL].longURL = req.body.longURL;
     res.redirect("/urls");
@@ -110,7 +116,7 @@ app.post("/urls/:shortURL", (req, res) => {
 
 // POST route to DELETE URL from urlDatabase.
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   if (userId === urlDatabase[req.params.shortURL].userId) {
     delete urlDatabase[req.params.shortURL];
     res.redirect("/urls");
@@ -129,7 +135,7 @@ app.post('/login', (req, res) => {
   if (email === user.email) {
     if (bcrypt.compareSync(password, userPassword)) {
     const newUserId = user.id;
-    res.cookie ('user_id', newUserId);
+    req.session.user_id = newUserId;
     return res.redirect('/urls');
     } else {
       return res.status(400).send("Error code 403: Wrong email or password!");
@@ -141,7 +147,7 @@ app.post('/login', (req, res) => {
 // POST route to LOG OUT user
 app.post('/logout', (req, res) => {
   const newUserId = generateRandomString();
-  res.clearCookie('user_id', newUserId);
+  req.session = null;
   res.redirect('/login');
 });
 
@@ -162,7 +168,7 @@ app.post('/register', (req, res) => {
   if (getUserByEmail(email, users)) {
     return res.status(400).send("Error code 400! Please write your email and password");
   }
-  res.cookie ('user_id', newUserId);
+  req.session.user_id = newUserId;
   users[newUserId] = userObj;  
   res.redirect('/urls');
   console.log(users);
@@ -172,7 +178,7 @@ app.post('/register', (req, res) => {
 
 // MAIN PAGE
 app.get("/urls", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const user = users[userId];
   const urlsUser = getUrlByUserId(userId, urlDatabase); 
   const templateVars = { urls: urlsUser, user: user};
@@ -184,7 +190,7 @@ app.get("/urls", (req, res) => {
 The GET /urls/new route needs to be defined before the 
 GET /urls/:id route. Routes defined earlier will take precedence */
 app.get('/urls/new',(req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const user = users[userId];
   const templateVars = {user: user};
   if (!userId) {
@@ -196,7 +202,7 @@ app.get('/urls/new',(req, res) => {
 
 // GET route to display a single URL and its shortened form.
 app.get("/urls/:shortURL", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const user = users[userId];
   const templateVars = { 
     id: req.params.shortURL, 
@@ -224,7 +230,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 // GET route to REGISTRATION form
 app.get("/register", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const user = users[userId];
   const templateVars = { user: user};
   if (userId) {
@@ -236,7 +242,7 @@ app.get("/register", (req, res) => {
 
 // GET route to LOG IN form
 app.get("/login", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const user = users[userId];
   console.log(user);
   const templateVars = { user: user};
