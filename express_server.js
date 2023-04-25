@@ -79,6 +79,9 @@ app.get('/urls/new',(req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const userId = req.session.user_id;
   const user = users[userId];
+  if (!urlDatabase[req.params.shortURL]) {
+    res.status(400).send("You try to access the URLs that does not exist.");
+  }
   const templateVars = { 
     id: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL].longURL,
@@ -106,7 +109,9 @@ app.get("/u/:shortURL", (req, res) => {
 // POST route to EDIT URL.
 app.post("/urls/:shortURL", (req, res) => {
   const userId = req.session.user_id;
-  if (userId === urlDatabase[req.params.shortURL].userId) {
+  if (userId === urlDatabase[req.params.shortURL].userID) {
+    console.log(userId);
+    console.log(urlDatabase[req.params.shortURL].userID)
     urlDatabase[req.params.shortURL].longURL = req.body.longURL;
     res.redirect("/urls");
   } else {
@@ -117,7 +122,7 @@ app.post("/urls/:shortURL", (req, res) => {
 // POST route to DELETE URL from urlDatabase.
 app.post("/urls/:shortURL/delete", (req, res) => {
   const userId = req.session.user_id;
-  if (userId === urlDatabase[req.params.shortURL].userId) {
+  if (userId === urlDatabase[req.params.shortURL].userID) {
     delete urlDatabase[req.params.shortURL];
     res.redirect("/urls");
   } else {
@@ -164,7 +169,6 @@ app.post('/login', (req, res) => {
 
 // POST route to LOG OUT user
 app.post('/logout', (req, res) => {
-  const newUserId = generateRandomString();
   req.session = null;
   res.redirect('/login');
 })
