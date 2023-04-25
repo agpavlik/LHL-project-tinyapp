@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8080; // The port which server will listen on. Default port 8080
 app.set("view engine", "ejs") // This tells the Express app to use EJS as its templating engine.
 const bcrypt = require("bcryptjs");
+const bodyParser = require("body-parser");
 
 /*The body-parser library will convert the request body from a Buffer
  into string that we can read. This needs to come before all of routes. */
@@ -10,6 +11,8 @@ app.use(express.urlencoded({ extended: true }))
 
 // Helpers - functions
 const { generateRandomString, getUserByEmail, getUserByPassword, getUrlByUserId } = require("./helpers");
+// Databases
+const { urlDatabase, users } = require('./databases/db.js');
 
 // Cookie-parser
 const cookieParser = require('cookie-parser');
@@ -22,31 +25,6 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000,
 }))
 
-// URL database
-const urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userId: "aJ48lW"
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userId: "aJ49lW"
-  },
-}
-
-// USERS database
-const users = {
-  aJ48lW: {
-    id: "aJ48lW",
-    email: "user@example.com",
-    password: bcrypt.hashSync("purple-monkey-dinosaur", 10)
-  },
-  aJ49lW: {
-    id: "aJ49lW",
-    email: "user2@example.com",
-    password: bcrypt.hashSync("dishwasher-funk", 10)
-  }
-}
 
 // POST route to handle the form submission.This needs to come before all of other routes.
 app.post("/urls", (req, res) => {
