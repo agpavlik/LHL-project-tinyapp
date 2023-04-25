@@ -1,9 +1,11 @@
 
 // URL database
-const urlDatabase = {}
+const urlDatabase = {
+}
 
 // USERS database
-const users = {}
+const users = {
+}
 
 
 module.exports = { urlDatabase, users };

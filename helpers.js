@@ -31,7 +31,7 @@ const getUserByPassword = (email, users) => {
 const getUrlByUserId = (userId, urlDatabase) => {
   let urlsByUser = {};
   for (let i in urlDatabase) {
-    if (urlDatabase[i].userId === userId ) {
+    if (urlDatabase[i].userID === userId ) {
       urlsByUser[i] = urlDatabase[i];
     }
   } return urlsByUser;
