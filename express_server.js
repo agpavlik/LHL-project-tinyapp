@@ -25,7 +25,6 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000,
 }))
 
-
 // ------------------------------------------------------------------------------------
 
 // POST route to handle the form submission.This needs to come before all of other routes.
@@ -79,17 +78,20 @@ app.get('/urls/new',(req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const userId = req.session.user_id;
   const user = users[userId];
+  if (!userId) {
+    return res.status(400).send("You have to log in in order to use this option");
+  }
   if (!urlDatabase[req.params.shortURL]) {
-    res.status(400).send("You try to access the URLs that does not exist.");
+   return res.status(400).send("You try to access the URLs that does not exist.");
+  }
+  if (urlDatabase[req.params.shortURL].userID !== userId) {
+   return res.status(400).send("This URL does not belong to you.");
   }
   const templateVars = { 
     id: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL].longURL,
     userID: urlDatabase[req.params.shortURL].userID, 
     user: user};
-  if (!userId) {
-    return res.redirect("/login");
-  }
   res.render("urls_show", templateVars);
 })
 
@@ -109,27 +111,34 @@ app.get("/u/:shortURL", (req, res) => {
 // POST route to EDIT URL.
 app.post("/urls/:shortURL", (req, res) => {
   const userId = req.session.user_id;
-  if (userId === urlDatabase[req.params.shortURL].userID) {
-    console.log(userId);
-    console.log(urlDatabase[req.params.shortURL].userID)
-    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
-    res.redirect("/urls");
-  } else {
-    res.status(400).send("You try to access the URLs that does not exist in your database.");
+  if (!userId) {
+    return res.status(400).send("You have to log in in order to use this option");
   }
+  if (!urlDatabase[req.params.shortURL]) {
+   return res.status(400).send("You try to access the URLs that does not exist.");
+  }
+  if (urlDatabase[req.params.shortURL].userID !== userId) {
+   return res.status(400).send("This URL does not belong to you.");
+  }
+  urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+  res.redirect("/urls");
 })
 
 // POST route to DELETE URL from urlDatabase.
 app.post("/urls/:shortURL/delete", (req, res) => {
   const userId = req.session.user_id;
-  if (userId === urlDatabase[req.params.shortURL].userID) {
-    delete urlDatabase[req.params.shortURL];
-    res.redirect("/urls");
-  } else {
-    res.status(400).send("You try to access the URLs that does not exist in your database.");
+  if (!userId) {
+    return res.status(400).send("You have to log in in order to use this option");
   }
+  if (!urlDatabase[req.params.shortURL]) {
+   return res.status(400).send("You try to access the URLs that does not exist.");
+  }
+  if (urlDatabase[req.params.shortURL].userID !== userId) {
+   return res.status(400).send("This URL does not belong to you.");
+  }
+  delete urlDatabase[req.params.shortURL];
+  res.redirect("/urls");
 })
-
 
 // -----------------------------------------------------------------------------------
 
